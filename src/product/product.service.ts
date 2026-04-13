@@ -1,12 +1,14 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductMapper } from './mappers/product.mapper';
 
 @Injectable()
 export class ProductService {
@@ -24,12 +26,15 @@ export class ProductService {
         }
       }
 
-      throw error;
+      throw new InternalServerErrorException(
+        'An error occurred while creating the product',
+      );
     }
   }
 
   async findAll() {
-    return await this.prisma.product.findMany();
+    const products = await this.prisma.product.findMany();
+    return ProductMapper.toResponseList(products);
   }
 
   async findOne(id: number) {
@@ -40,7 +45,7 @@ export class ProductService {
     if (!productFound)
       throw new NotFoundException(`Product with id ${id} not found`);
 
-    return productFound;
+    return ProductMapper.toResponse(productFound);
   }
 
   async update(id: number, data: UpdateProductDto) {
