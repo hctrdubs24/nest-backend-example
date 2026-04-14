@@ -4,10 +4,20 @@ import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModule } from './product/product.module';
+import { UserModule } from './user/user.module';
+import { APP_FILTER } from '@nestjs/core';
+import { PrismaClientFilter } from './prisma/prisma.filter';
 
 @Module({
-  imports: [PrismaModule, ProductModule],
+  imports: [PrismaModule, ProductModule, UserModule],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [
+    AppService,
+    PrismaService,
+    {
+      provide: APP_FILTER,
+      useClass: PrismaClientFilter,
+    },
+  ],
 })
 export class AppModule {}
