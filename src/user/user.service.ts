@@ -40,7 +40,13 @@ export class UserService {
 
     const data = { ...userDto };
 
-    if (data.email) data.email = data.email.toLowerCase();
+    if (data.email) {
+      if (typeof data.email === 'string') {
+        data.email = data.email.toLowerCase();
+      } else if (typeof data.email.set === 'string') {
+        data.email.set = data.email.set.toLowerCase();
+      }
+    }
 
     const updatedUser = await this.prisma.user.update({ data, where: { id } });
 

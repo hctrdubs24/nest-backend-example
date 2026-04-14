@@ -1,3 +1,11 @@
-import { Prisma } from 'src/generated/prisma/client';
+import { UserUpdateInputSchema } from 'src/generated/zod';
+import { z } from 'zod';
 
-export type UpdateUserDto = Prisma.UserUpdateInput;
+export const UserUpdateSchema = z.intersection(
+  UserUpdateInputSchema,
+  z.object({
+    email: z.email().toLowerCase(),
+  }),
+);
+
+export type UpdateUserDto = z.infer<typeof UserUpdateInputSchema>;
