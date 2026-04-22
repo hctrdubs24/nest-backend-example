@@ -23,7 +23,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:sync": "prisma migrate dev && prisma generate"
+    "db:sync": "rm -rf src/generated && prisma migrate dev && prisma generate"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
