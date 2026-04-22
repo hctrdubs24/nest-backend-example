@@ -3,15 +3,23 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMapper } from './mappers/user.mapper';
+import { EncryptionService } from 'src/encryption/encryption.service';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly encryptionService: EncryptionService,
+  ) {}
 
   async create(userDto: CreateUserDto) {
+    const hashedPassword = await this.encryptionService.encrypt(
+      userDto.password,
+    );
     const data: CreateUserDto = {
       ...userDto,
-      email: userDto.email.toLowerCase(),
+      password: hashedPassword,
     };
 
     const createdUser = await this.prisma.user.create({ data });
@@ -40,12 +48,8 @@ export class UserService {
 
     const data = { ...userDto };
 
-    if (data.email) {
-      if (typeof data.email === 'string') {
-        data.email = data.email.toLowerCase();
-      } else if (typeof data.email.set === 'string') {
-        data.email.set = data.email.set.toLowerCase();
-      }
+    if (data.password && typeof data.password === 'string') {
+      data.password = await this.encryptionService.encrypt(data.password);
     }
 
     const updatedUser = await this.prisma.user.update({ data, where: { id } });
@@ -64,7 +68,15 @@ export class UserService {
     return UserMapper.toResponse(removedUser);
   }
 
-  private async findOneByIdAndEnabled(id: number) {
+  async findByEmail(email: string) {
+    const userFound = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase(), status: true },
+    });
+
+    return userFound;
+  }
+
+  async findOneByIdAndEnabled(id: number) {
     const userFound = await this.prisma.user.findUnique({
       where: { id, status: true },
     });
@@ -72,5 +84,12 @@ export class UserService {
     if (!userFound) throw new NotFoundException(`User with id ${id} not found`);
 
     return userFound;
+  }
+
+  async incrementTokenVersion(id: number) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { tokenVersion: { increment: 1 } },
+    });
   }
 }

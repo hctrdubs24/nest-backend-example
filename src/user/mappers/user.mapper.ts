@@ -1,4 +1,5 @@
-import { User, UserDTO } from '../entities/user.entity';
+import { UserDTO } from '../dto/response-user.dto';
+import { User } from '../entities/user.entity';
 
 export class UserMapper {
   static toResponse(user: User): UserDTO {
@@ -6,6 +7,7 @@ export class UserMapper {
       id: user.id,
       email: user.email,
       name: user.name,
+      tokenVersion: user.tokenVersion,
     };
   }
 
