@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { HttpAdapterHost } from '@nestjs/core';
+import { log } from 'console';
 import { PrismaClientKnownRequestError } from 'src/generated/prisma/internal/prismaNamespace';
 
 @Catch(PrismaClientKnownRequestError)
@@ -33,9 +34,20 @@ export class PrismaClientFilter implements ExceptionFilter {
       case 'P2002': {
         // Unique constraint violation
         statusCode = HttpStatus.CONFLICT;
-        const target =
-          (exception.meta?.target as string[])?.join(', ') || 'field';
-        message = `The field ${target} is already in use`;
+
+        const target = exception.meta?.target;
+        let fieldName = '';
+
+        if (Array.isArray(target)) {
+          fieldName = target.join(', ');
+        } else {
+          const match = exception.message.match(/on the fields: \(`([^`]+)`\)/);
+          if (match && match[1]) fieldName = match[1];
+        }
+
+        message = fieldName
+          ? `The field '${fieldName}' is already in use`
+          : 'The record with this data already exists';
         break;
       }
     }
