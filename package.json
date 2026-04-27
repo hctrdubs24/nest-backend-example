@@ -18,12 +18,14 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "setup": "npm install && npx prisma migrate dev && npx prisma generate",
+    "setup": "npm install && npx prisma migrate dev && npx prisma generate && npx prisma db seed",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:sync": "rm -rf src/generated && prisma migrate dev && prisma generate"
+    "db:sync": "rm -rf src/generated && prisma migrate dev && prisma generate",
+    "db:seed": "prisma db seed",
+    "prisma:deploy": "prisma migrate deploy && prisma db seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -72,6 +74,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0",
     "zod-prisma-types": "^3.3.11"
