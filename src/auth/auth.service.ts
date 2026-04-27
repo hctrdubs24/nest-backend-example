@@ -37,7 +37,7 @@ export class AuthService {
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid credentials');
 
-    return UserMapper.toResponse(user);
+    return UserMapper.toJwtSign(user);
   }
 
   async login(user: JwtSingRequestDto, metadata: { ip: string; ua: string }) {
@@ -102,7 +102,12 @@ export class AuthService {
   }
 
   private async generateTokens(user: JwtSingRequestDto) {
-    const payload = { username: user.name, sub: user.id, v: user.tokenVersion };
+    const payload = {
+      username: user.name,
+      sub: user.id,
+      v: user.tokenVersion,
+      role: user.roleName,
+    };
 
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(payload, { expiresIn: '15m' }),

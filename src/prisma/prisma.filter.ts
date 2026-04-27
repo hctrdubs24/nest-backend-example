@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { HttpAdapterHost } from '@nestjs/core';
-import { log } from 'console';
 import { PrismaClientKnownRequestError } from 'src/generated/prisma/internal/prismaNamespace';
 
 @Catch(PrismaClientKnownRequestError)

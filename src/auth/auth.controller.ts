@@ -14,13 +14,7 @@ import { JwtAuthGuard } from './auth-strategy/jwt/jwt-auth.guard';
 import { LocalAuthGuard } from './auth-strategy/local/local-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginRequestDto } from './dto/login.dto';
-
-interface AuthenticatedRequest {
-  user: {
-    userId: number;
-    username: string;
-  };
-}
+import { LogoutAllDevicesRequestDto } from './dto/logout.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -61,7 +55,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
   @HttpCode(HttpStatus.OK)
-  async logoutAll(@Request() req: AuthenticatedRequest) {
+  async logoutAll(@Request() req: LogoutAllDevicesRequestDto) {
     return this.authService.logoutFromAllDevices(req.user.userId);
   }
 
