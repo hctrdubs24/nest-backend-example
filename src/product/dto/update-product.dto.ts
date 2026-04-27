@@ -1,3 +1,4 @@
-import { Prisma } from 'src/generated/prisma/client';
+import { createZodDto } from 'nestjs-zod';
+import { ProductCreateInputSchema } from 'src/generated/zod';
 
-export type UpdateProductDto = Prisma.ProductUpdateInput;
+export class UpdateProductDto extends createZodDto(ProductCreateInputSchema) {}

@@ -1,5 +1,11 @@
-import { Product as PrismaProduct } from 'src/generated/prisma/client';
+import { createZodDto } from 'nestjs-zod';
+import { ProductSchema } from 'src/generated/zod';
 
-export type ProductDTO = Omit<PrismaProduct, 'createdAt' | 'updatedAt'>;
+export const ProductDTOSchema = ProductSchema.omit({
+  createdAt: true,
+  updatedAt: true,
+});
 
-export type Product = PrismaProduct;
+export class Product extends createZodDto(ProductSchema) {}
+
+export class ProductDTO extends createZodDto(ProductDTOSchema) {}
