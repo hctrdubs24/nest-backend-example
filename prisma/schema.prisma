@@ -37,6 +37,14 @@ model User {
   status       Boolean   @default(true)
   tokenVersion Int       @default(0)
   sessions     Session[]
+  role         Role      @relation(fields: [roleId], references: [id])
+  roleId       Int       @default(1)
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // "ADMIN", "USER"
+  users User[]
 }
 
 model Session {
