@@ -9,6 +9,12 @@ generator client {
   moduleFormat = "cjs"
 }
 
+generator zod {
+  provider         = "zod-prisma-types"
+  output           = "../src/generated/zod"
+  useMultipleFiles = true
+}
+
 datasource db {
   provider = "sqlite"
 }
@@ -21,4 +27,40 @@ model Product {
   image       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  password     String
+  name         String?
+  status       Boolean   @default(true)
+  tokenVersion Int       @default(0)
+  sessions     Session[]
+  role         Role      @relation(fields: [roleId], references: [id])
+  roleId       Int       @default(1)
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // "ADMIN", "USER"
+  users User[]
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  refreshToken String   @unique
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent    String? // metadata del dispositivo
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model RevokedToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
