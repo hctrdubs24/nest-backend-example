@@ -1,10 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EncryptionService } from 'src/encryption/encryption.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserMapper } from './mappers/user.mapper';
-import { EncryptionService } from 'src/encryption/encryption.service';
-import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -28,13 +27,17 @@ export class UserService {
   }
 
   async findAll() {
-    const users = await this.prisma.user.findMany({ where: { status: true } });
+    const users = await this.prisma.user.findMany({
+      where: { status: true },
+      include: { role: true },
+    });
     return UserMapper.toResponseList(users);
   }
 
   async findOne(email: string) {
     const userFound = await this.prisma.user.findUnique({
       where: { email: email.toLowerCase(), status: true },
+      include: { role: true },
     });
 
     if (!userFound)
@@ -71,6 +74,7 @@ export class UserService {
   async findByEmail(email: string) {
     const userFound = await this.prisma.user.findUnique({
       where: { email: email.toLowerCase(), status: true },
+      include: { role: true },
     });
 
     return userFound;
@@ -79,6 +83,7 @@ export class UserService {
   async findOneByIdAndEnabled(id: number) {
     const userFound = await this.prisma.user.findUnique({
       where: { id, status: true },
+      include: { role: true },
     });
 
     if (!userFound) throw new NotFoundException(`User with id ${id} not found`);
