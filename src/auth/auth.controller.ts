@@ -10,6 +10,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from './auth-strategy/jwt/jwt-auth.guard';
 import { LocalAuthGuard } from './auth-strategy/local/local-auth.guard';
 import { AuthService } from './auth.service';
@@ -20,6 +21,7 @@ import { LogoutAllDevicesRequestDto } from './dto/logout.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -31,6 +33,7 @@ export class AuthController {
     return this.authService.login(req.user, { ip, ua });
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('refresh')
   async refresh(
     @Body('refresh_token') rt: string,
