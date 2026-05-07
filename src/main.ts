@@ -2,12 +2,13 @@ import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import 'dotenv/config';
-import { AppModule } from './app.module';
-import { ZodValidationPipe } from 'nestjs-zod';
 import helmet from 'helmet';
+import { Logger } from 'nestjs-pino';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   app.use(helmet());
 
@@ -38,6 +39,8 @@ async function bootstrap() {
     methods,
     credentials: true,
   });
+
+  app.useLogger(app.get(Logger));
 
   await app.listen(process.env.PORT ?? 3000);
 }
