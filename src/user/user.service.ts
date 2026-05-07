@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EncryptionService } from 'src/encryption/encryption.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -12,6 +12,8 @@ export class UserService {
     private readonly encryptionService: EncryptionService,
   ) {}
 
+  private readonly logger = new Logger(UserService.name, { timestamp: true });
+
   async create(userDto: CreateUserDto) {
     const hashedPassword = await this.encryptionService.encrypt(
       userDto.password,
@@ -22,6 +24,15 @@ export class UserService {
     };
 
     const createdUser = await this.prisma.user.create({ data });
+
+    this.logger.log(
+      {
+        userId: createdUser.id,
+        email: createdUser.email,
+        action: 'user_created',
+      },
+      'Nuevo usuario registrado',
+    );
 
     return UserMapper.toResponse(createdUser);
   }
@@ -57,6 +68,15 @@ export class UserService {
 
     const updatedUser = await this.prisma.user.update({ data, where: { id } });
 
+    this.logger.log(
+      {
+        targetUserId: id,
+        fieldsUpdated: Object.keys(userDto),
+        action: 'user_updated',
+      },
+      'Usuario actualizado',
+    );
+
     return UserMapper.toResponse(updatedUser);
   }
 
@@ -67,6 +87,11 @@ export class UserService {
       data: { status: false },
       where: { id },
     });
+
+    this.logger.warn(
+      { targetUserId: id, action: 'user_deactivated' },
+      'Usuario desactivado (soft delete)',
+    );
 
     return UserMapper.toResponse(removedUser);
   }

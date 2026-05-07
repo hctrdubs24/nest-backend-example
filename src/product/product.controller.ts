@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from 'src/auth/auth-strategy/jwt/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/auth-strategy/jwt/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
@@ -30,6 +31,7 @@ export class ProductController {
     return this.productService.create(createProductDto);
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000, blockDuration: 1000 } })
   @Get()
   @ApiResponse({
     status: 200,
