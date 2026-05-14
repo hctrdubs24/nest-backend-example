@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -31,7 +32,7 @@ async function bootstrap() {
 
   // Cors configuration to allow requests from specified origins
 
-  const origin = process.env.CORS_ORIGINS?.split(',') || [];
+  const origin = process.env.CORS_ORIGIN?.split(',') || [];
   const methods =
     process.env.CORS_METHODS?.split(',').map((m) => m.trim()) || [];
   app.enableCors({
@@ -41,6 +42,8 @@ async function bootstrap() {
   });
 
   app.useLogger(app.get(Logger));
+
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   await app.listen(process.env.PORT ?? 3000);
 }

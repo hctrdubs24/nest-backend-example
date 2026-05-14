@@ -25,16 +25,17 @@ export class AuthService {
 
   private readonly logger = new Logger(AuthService.name);
 
+  private auditLog(action: string, metadata: Record<string, any>) {
+    this.logger.log({ action, timestamp: new Date().toISOString(), ...metadata });
+  }
+
   async validate(loginDto: LoginDTO) {
     const { email, password } = loginDto;
 
     const user = await this.userService.findByEmail(email);
 
     if (!user) {
-      this.logger.warn(
-        { email, action: 'login_failed', reason: 'user_not_found' },
-        'Intento de login fallido',
-      );
+      this.logger.warn({ action: 'login_failed', reason: 'user_not_found' }, 'Intento de login fallido');
       throw new NotFoundException('User not found');
     }
 
@@ -45,12 +46,7 @@ export class AuthService {
 
     if (!isPasswordValid) {
       this.logger.warn(
-        {
-          userId: user.id,
-          email,
-          action: 'login_failed',
-          reason: 'invalid_password',
-        },
+        { userId: user.id, action: 'login_failed', reason: 'invalid_password' },
         'Credenciales inválidas',
       );
       throw new UnauthorizedException('Invalid credentials');
@@ -60,15 +56,7 @@ export class AuthService {
   }
 
   async login(user: JwtSingRequestDto, metadata: { ip: string; ua: string }) {
-    this.logger.log(
-      {
-        userId: user.id,
-        email: user.email,
-        ...metadata,
-        action: 'login_success',
-      },
-      'Usuario autenticado exitosamente',
-    );
+    this.auditLog('login_success', { userId: user.id, ...metadata });
 
     const tokens = await this.generateTokens(user);
     await this.sessionService.createSession(
@@ -93,10 +81,7 @@ export class AuthService {
       if (payload && payload.exp) {
         const expiresAt = new Date(payload.exp * 1000);
         await this.backlistTokenService.revoke(cleanToken, expiresAt);
-        this.logger.log(
-          { userId: payload.sub, action: 'logout' },
-          'Sesión cerrada (AccessToken revocado)',
-        );
+        this.auditLog('logout', { userId: payload.sub });
       }
     }
 
@@ -111,10 +96,7 @@ export class AuthService {
     await this.userService.incrementTokenVersion(userId);
     await this.sessionService.deleteAllSessions(userId);
 
-    this.logger.warn(
-      { userId, action: 'logout_all' },
-      'Cierre de sesión global realizado',
-    );
+    this.auditLog('logout_all', { userId });
 
     return { message: 'Se ha cerrado la sesión en todos los dispositivos' };
   }
@@ -123,16 +105,12 @@ export class AuthService {
     const session = await this.sessionService.findSession(oldRefreshToken);
 
     if (!session || session.expiresAt < new Date()) {
-      this.logger.warn(
-        { ...metadata, action: 'refresh_token_failed' },
-        'Intento de refresco con sesión inválida/expirada',
-      );
+      this.logger.warn({ action: 'refresh_token_failed', ...metadata }, 'Intento de refresco con sesión inválida/expirada');
       throw new UnauthorizedException('Expired session');
     }
 
     const user = await this.userService.findOneByIdAndEnabled(session.userId);
 
-    // Rotación: Eliminar sesión antigua y crear nueva
     await this.sessionService.deleteSession(oldRefreshToken);
 
     const tokens = await this.generateTokens(user);
@@ -142,10 +120,7 @@ export class AuthService {
       metadata,
     );
 
-    this.logger.log(
-      { userId: user.id, action: 'token_refresh' },
-      'Tokens renovados exitosamente',
-    );
+    this.auditLog('token_refresh', { userId: user.id });
 
     return tokens;
   }

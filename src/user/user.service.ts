@@ -14,6 +14,14 @@ export class UserService {
 
   private readonly logger = new Logger(UserService.name, { timestamp: true });
 
+  private auditLog(action: string, metadata: Record<string, any>) {
+    this.logger.log({
+      action,
+      timestamp: new Date().toISOString(),
+      ...metadata,
+    });
+  }
+
   async create(userDto: CreateUserDto) {
     const hashedPassword = await this.encryptionService.encrypt(
       userDto.password,
@@ -25,14 +33,7 @@ export class UserService {
 
     const createdUser = await this.prisma.user.create({ data });
 
-    this.logger.log(
-      {
-        userId: createdUser.id,
-        email: createdUser.email,
-        action: 'user_created',
-      },
-      'Nuevo usuario registrado',
-    );
+    this.auditLog('user_created', { targetUserId: createdUser.id });
 
     return UserMapper.toResponse(createdUser);
   }
@@ -68,14 +69,10 @@ export class UserService {
 
     const updatedUser = await this.prisma.user.update({ data, where: { id } });
 
-    this.logger.log(
-      {
-        targetUserId: id,
-        fieldsUpdated: Object.keys(userDto),
-        action: 'user_updated',
-      },
-      'Usuario actualizado',
-    );
+    this.auditLog('user_updated', {
+      targetUserId: id,
+      fieldsUpdated: Object.keys(userDto),
+    });
 
     return UserMapper.toResponse(updatedUser);
   }
@@ -88,10 +85,7 @@ export class UserService {
       where: { id },
     });
 
-    this.logger.warn(
-      { targetUserId: id, action: 'user_deactivated' },
-      'Usuario desactivado (soft delete)',
-    );
+    this.auditLog('user_deactivated', { targetUserId: id });
 
     return UserMapper.toResponse(removedUser);
   }

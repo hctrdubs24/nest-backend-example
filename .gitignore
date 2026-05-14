@@ -63,3 +63,6 @@ db/
     
 # Archivos generados
 src/generated/
+
+## Agentes IA
+GEMINI.md

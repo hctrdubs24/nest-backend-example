@@ -13,6 +13,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { ProductModule } from './product/product.module';
 import { UserModule } from './user/user.module';
 import { LoggerModule } from 'nestjs-pino';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { LoggerModule } from 'nestjs-pino';
     PrismaService,
     EncryptionService,
     { provide: APP_FILTER, useClass: PrismaClientFilter },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
