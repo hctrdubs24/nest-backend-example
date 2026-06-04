@@ -8,6 +8,7 @@ import {
   Ip,
   Post,
   Request,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -16,6 +17,7 @@ import { LocalAuthGuard } from './auth-strategy/local/local-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginRequestDto } from './dto/login.dto';
 import { LogoutAllDevicesRequestDto } from './dto/logout.dto';
+import { Cookies } from './decorator/cookies/cookies.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -36,10 +38,12 @@ export class AuthController {
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('refresh')
   async refresh(
-    @Body('refresh_token') rt: string,
+    @Cookies('refreshToken') rt: string | undefined,
     @Ip() ip: string,
     @Headers('user-agent') ua: string,
   ) {
+    if (!rt) throw new UnauthorizedException('Refresh token missing');
+
     return this.authService.refresh(rt, { ip, ua });
   }
 
